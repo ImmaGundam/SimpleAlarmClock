@@ -1,0 +1,1 @@
+pyinstaller --noconsole --onefile --icon=icon.ico --name AlarmClock --add-data "web;web" --add-data "web\sounds;sounds" alarm.pyw
