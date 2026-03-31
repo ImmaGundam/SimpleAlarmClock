@@ -52,7 +52,6 @@ body.settings-body {
   font-size: 14px;
   padding: clamp(12px, 3vw, 24px);
   min-height: 100vh;
-  /* min dimensions enforced by Python API clamps + JS handle constraints */
   min-width: 320px;
   min-height: 400px;
   box-sizing: border-box;
@@ -124,6 +123,17 @@ body.settings-body {
   letter-spacing: 0.03em;
   transition: opacity 0.3s;
 }
+
+/* ── Alarm mode note ── */
+.alarm-mode-note {
+  min-height: 30px;
+  margin: 0 0 8px;
+  font-size: 10px;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+.alarm-mode-note.warning { color: #b35b00; }
+.alarm-mode-note.ok { color: #2b7a2b; }
 
 /* ── TIME INPUT ── */
 .input-row {
@@ -249,7 +259,6 @@ input[type="time"]:focus { border-color: var(--accent); }
          in index.html AND settings.html)
    ══════════════════════════════════════ */
 
-/* Labels */
 .setting-label {
   font-size: 10px;
   font-weight: 700;
@@ -260,7 +269,6 @@ input[type="time"]:focus { border-color: var(--accent); }
   margin-top: 18px;
   display: block;
 }
-/* index.html inline panel uses its own specificity — keep original */
 .settings-card .setting-label {
   font-size: 11px;
   font-weight: 600;
@@ -268,7 +276,6 @@ input[type="time"]:focus { border-color: var(--accent); }
   margin-top: 0;
 }
 
-/* Toggle rows */
 .toggle-row {
   display: flex;
   justify-content: space-between;
@@ -278,10 +285,8 @@ input[type="time"]:focus { border-color: var(--accent); }
 }
 .toggle-row:last-child { border-bottom: none; }
 .toggle-label-text { font-size: 14px; color: #333; }
-/* settings.html uses plain <span> inside .toggle-row */
 .toggle-row > span { font-size: 13px; color: #333; }
 
-/* Toggle switch */
 .toggle {
   position: relative;
   width: 44px; height: 24px;
@@ -309,7 +314,6 @@ input[type="time"]:focus { border-color: var(--accent); }
 .toggle input:checked + .slider-track { background: #007aff; }
 .toggle input:checked + .slider-track::before { transform: translateX(20px); }
 
-/* Select dropdowns */
 select {
   width: 100%;
   padding: 9px 36px 9px 12px;
@@ -330,7 +334,6 @@ select {
 }
 select:focus { border-color: #007aff; }
 
-/* Range slider */
 input[type="range"] {
   width: 100%;
   accent-color: #007aff;
@@ -339,7 +342,6 @@ input[type="range"] {
   display: block;
 }
 
-/* Theme swatches grid */
 .theme-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -371,7 +373,6 @@ input[type="range"] {
   text-overflow: ellipsis;
 }
 
-/* Custom file button */
 .file-btn {
   display: flex;
   align-items: center;
@@ -397,7 +398,6 @@ input[type="range"] {
   margin-top: 5px;
 }
 
-/* ── Preview buttons — always dark text, readable on any theme ── */
 .btn-preview-row {
   display: flex;
   gap: 8px;
@@ -413,13 +413,12 @@ input[type="range"] {
   font-weight: 600;
   cursor: pointer;
   background: rgba(0,0,0,0.09);
-  color: #111;               /* always dark — readable across all themes */
+  color: #111;
   transition: background 0.15s;
 }
 .btn-preview:hover  { background: rgba(0,0,0,0.17); }
 .btn-preview:active { background: rgba(0,0,0,0.24); transform: scale(0.97); }
 
-/* Settings footer (index.html inline panel) */
 .settings-footer {
   text-align: center;
   font-size: 10px;
@@ -449,7 +448,6 @@ input[type="range"] {
   margin-bottom: 18px;
   color: #111;
 }
-/* Fluid theme grid for settings window */
 .settings-page-card .theme-grid {
   grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
   margin-top: 8px;
@@ -460,7 +458,6 @@ input[type="range"] {
 }
 .settings-page-card .setting-label:first-of-type { margin-top: 0; }
 
-/* Save button */
 .save-btn {
   width: 100%;
   padding: clamp(10px, 2.5vw, 13px);
@@ -483,7 +480,6 @@ input[type="range"] {
 .save-btn:active { transform: scale(0.97); }
 .save-flash { background: #34c759 !important; }
 
-/* Settings page footer */
 .settings-page-footer {
   text-align: center;
   font-size: 10px;
@@ -626,7 +622,5 @@ body:not(.in-browser).clock-body { padding-top: 32px; }
   .btn-preview-row { flex-direction: column; }
 }
 
-
-/* Native mobile app (Capacitor) should not show browser chrome clones */
 body.native-app #browser-nav { display: none !important; }
 body.native-app.clock-body { padding-top: 16px !important; }
