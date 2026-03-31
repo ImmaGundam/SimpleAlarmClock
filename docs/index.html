@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alarm Clock — WebGeeks</title>
+<link rel="icon" href="icon.ico" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="clock-body">
+
+<!-- ── CUSTOM TITLEBAR (pywebview frameless mode) ── -->
+<div id="titlebar" class="pywebview-drag-region">
+  <button class="wc-btn wc-min"   onclick="winMinimize()" title="Minimize">&#x2212;</button>
+  <button class="wc-btn wc-max"   onclick="winMaximize()" title="Maximize">&#x25A1;</button>
+  <button class="wc-btn wc-close" onclick="winClose()"    title="Close">&#x2715;</button>
+</div>
+
+<!-- ── BROWSER NAV (hidden in pywebview) ── -->
+<nav id="browser-nav">
+  <a class="nav-brand" href="https://webgeeks.org" target="_blank">
+    <span class="nav-title">Simple Alarm Clock <span>by WebGeeks IT</span></span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="https://webgeeks.org"        target="_blank">webgeeks.org</a>
+    <a class="nav-link" href="https://github.com/ImmaGundam/SimpleAlarmClock" target="_blank">GitHub</a>
+  </div>
+</nav>
+
+<!-- ── MAIN CARD ── -->
+<div class="card" id="main-card">
+  <div class="header">
+    <!-- icon.ico shown as image above the title -->
+    <img class="header-icon" src="clock.png" alt="Alarm Clock icon">
+    <h1>Alarm Clock</h1>
+  </div>
+
+  <div class="clock-wrap">
+    <div id="clock">00:00:00</div>
+    <div id="date-display"></div>
+  </div>
+
+  <div id="alarm-status"></div>
+
+  <div class="input-row">
+    <input type="time" step="1" id="alarmTime">
+  </div>
+
+  <button class="btn btn-primary" id="alarmButton" onclick="alarmAction()">
+    Set Alarm
+  </button>
+
+  <div class="divider"></div>
+
+  <button class="btn btn-secondary" onclick="openSettings()">
+    ⚙️ Settings
+  </button>
+</div>
+
+<!-- ── SETTINGS PANEL (inline overlay) ── -->
+<div id="settings-panel">
+  <div class="settings-card">
+    <div class="settings-header">
+      <h2>Settings</h2>
+      <button class="close-btn" onclick="closeSettings()">✕</button>
+    </div>
+
+    <!-- Display -->
+    <div class="setting-group">
+      <span class="setting-label">Display</span>
+      <div class="toggle-row">
+        <span class="toggle-label-text">Military Time (24h)</span>
+        <label class="toggle">
+          <input type="checkbox" id="military" onchange="settingChanged()">
+          <span class="slider-track"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label-text">Show Date</span>
+        <label class="toggle">
+          <input type="checkbox" id="showDate" checked onchange="settingChanged()">
+          <span class="slider-track"></span>
+        </label>
+      </div>
+    </div>
+
+  <!-- Display -->
+
+    <!-- Theme -->
+    <div class="setting-group">
+      <span class="setting-label">Theme</span>
+      <div class="theme-grid" id="themeGrid"></div>
+    </div>
+
+    <!-- Font -->
+    <div class="setting-group">
+      <span class="setting-label">Font</span>
+      <select id="font" onchange="applyFont(this.value)">
+        <option value="'DM Sans', sans-serif">DM Sans (Default)</option>
+        <option value="'Segoe UI', sans-serif">Segoe UI</option>
+        <option value="Arial, sans-serif">Arial</option>
+        <option value="Verdana, sans-serif">Verdana</option>
+        <option value="Tahoma, sans-serif">Tahoma</option>
+        <option value="Georgia, serif">Georgia</option>
+        <option value="'Times New Roman', serif">Times New Roman</option>
+        <option value="'Courier New', monospace">Courier New</option>
+        <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+      </select>
+    </div>
+
+    <!-- Alarm Sound -->
+    <div class="setting-group">
+      <span class="setting-label">Alarm Sound</span>
+      <select id="sound" onchange="settingChanged()">
+        <option value="alarm1">Standard Alarm</option>
+        <option value="alarm2">Digital Alarm</option>
+        <option value="alarm3">Classic Alarm</option>
+        <option value="gentle">Gentle Chime</option>
+        <option value="beep">Simple Beep</option>
+        <option value="buzzer">Buzzer</option>
+        <option value="custom">📁 Custom File…</option>
+      </select>
+      <button class="file-btn" id="customFileBtn" onclick="browseSound()" style="display:none;">
+        📂 Browse for sound file
+      </button>
+      <div id="custom-sound-name"></div>
+      <div class="btn-preview-row">
+        <button class="btn-preview" onclick="previewSound()">▶ Preview</button>
+        <button class="btn-preview" onclick="stopPreview()">■ Stop</button>
+      </div>
+    </div>
+
+    <!-- Advanced -->
+    <div class="setting-group">
+      <span class="setting-label">Advanced</span>
+      <div class="toggle-row">
+        <span class="toggle-label-text">Disable Animations</span>
+        <label class="toggle">
+          <input type="checkbox" id="disableJS" onchange="toggleAnimations()">
+          <span class="slider-track"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-footer">
+      Developed by James D.<br>
+      <a href="https://github.com/ImmaGundam" target="_blank">github.com/ImmaGundam</a>
+      &nbsp;·&nbsp;
+      <a href="https://webgeeks.org" target="_blank">webgeeks.org</a>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Hidden file input -->
+<input type="file" id="fileInput" accept="audio/*" style="display:none"
+       onchange="handleCustomFile(this)">
+
+
+<script>
+// ─── PLATFORM DETECTION ─────────────────────────────────────────────────────
+const isNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const Plugins = window.Capacitor?.Plugins || {};
+const LocalNotifications = Plugins.LocalNotifications;
+const Preferences = Plugins.Preferences;
+
+(function detectEnv() {
+  document.body.classList.toggle('in-browser', !isNativeApp);
+  document.body.classList.toggle('native-app', isNativeApp);
+})();
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let state = {
+  military: false,
+  showDate: true,
+  theme: 'mac',
+  font: "'DM Sans', sans-serif",
+  sound: 'alarm1',
+  disableJS: false,
+  customSoundURL: null,
+  customSoundName: null
+};
+
+let alarmSet = false;
+let alarmTime = null;
+let scheduledNotificationId = null;
+let audio = new Audio();
+let previewAudio = new Audio();
+let animationsDisabled = false;
+
+// ─── THEMES ──────────────────────────────────────────────────────────────────
+const THEMES = {
+  Light:          { bg1: '#e9eef5', bg2: '#cfd9e6', cardBg: 'rgba(255,255,255,0.38)',  cardBorder: 'rgba(255,255,255,0.6)',   text: '#1a1a2e', textMuted: '#666',                     accent: '#007aff', accentText: '#fff',    btnSecBg: 'rgba(0,0,0,0.08)',       btnSecText: '#1a1a2e', dark: false, label: 'Light' },
+  Dark:      { bg1: '#2c2c2e', bg2: '#1c1c1e', cardBg: 'rgba(60,60,65,0.55)',     cardBorder: 'rgba(255,255,255,0.12)', text: '#f0f0f0', textMuted: 'rgba(255,255,255,0.45)',    accent: '#0a84ff', accentText: '#fff',    btnSecBg: 'rgba(255,255,255,0.10)', btnSecText: '#f0f0f0', dark: true,  label: 'Dark' },
+  dark:         { bg1: '#0f2027', bg2: '#2c5364', cardBg: 'rgba(20,40,55,0.55)',     cardBorder: 'rgba(100,180,255,0.15)', text: '#e8f4ff', textMuted: 'rgba(200,220,255,0.5)',     accent: '#4da6ff', accentText: '#001a33', btnSecBg: 'rgba(100,180,255,0.12)', btnSecText: '#e8f4ff', dark: true,  label: 'Blue Glass' },
+  red:          { bg1: '#2b0000', bg2: '#220022', cardBg: 'rgba(60,0,40,0.55)',      cardBorder: 'rgba(255,80,120,0.2)',   text: '#ffe0ea', textMuted: 'rgba(255,160,180,0.55)',    accent: '#ff3b5c', accentText: '#fff',    btnSecBg: 'rgba(255,80,120,0.15)',  btnSecText: '#ffe0ea', dark: true,  label: 'Crimson' },
+  pinklight:    { bg1: '#ffd6ec', bg2: '#ffeaf6', cardBg: 'rgba(255,255,255,0.45)',  cardBorder: 'rgba(255,180,220,0.6)', text: '#4a0033', textMuted: '#c06090',                   accent: '#e0006a', accentText: '#fff',    btnSecBg: 'rgba(224,0,106,0.10)',   btnSecText: '#4a0033', dark: false, label: 'Pink' },
+  pinkdark:     { bg1: '#5c0030', bg2: '#1f0010', cardBg: 'rgba(80,0,45,0.55)',      cardBorder: 'rgba(255,100,160,0.2)', text: '#ffdaea', textMuted: 'rgba(255,150,190,0.55)',    accent: '#ff4d9e', accentText: '#3a0020', btnSecBg: 'rgba(255,100,160,0.15)', btnSecText: '#ffdaea', dark: true,  label: 'Rose Dark' },
+  rainbowlight: { bg1: '#ffadad', bg2: '#9bf6ff', cardBg: 'rgba(255,255,255,0.42)', cardBorder: 'rgba(255,255,255,0.7)', text: '#1a1a2e', textMuted: '#555',                      accent: '#7c3aed', accentText: '#fff',    btnSecBg: 'rgba(124,58,237,0.10)', btnSecText: '#1a1a2e', dark: false, label: 'Rainbow' },
+  rainbowdark:  { bg1: '#2a0050', bg2: '#003d4a', cardBg: 'rgba(30,0,70,0.5)',       cardBorder: 'rgba(150,100,255,0.25)',text: '#e8d8ff', textMuted: 'rgba(200,170,255,0.5)',     accent: '#a855f7', accentText: '#fff',    btnSecBg: 'rgba(168,85,247,0.18)', btnSecText: '#e8d8ff', dark: true,  label: 'Neon Dark' },
+  forest:       { bg1: '#1a3a1a', bg2: '#2d5a2d', cardBg: 'rgba(20,50,20,0.55)',     cardBorder: 'rgba(100,200,100,0.2)', text: '#d8f0d8', textMuted: 'rgba(160,220,160,0.6)',    accent: '#4caf50', accentText: '#0a1f0a', btnSecBg: 'rgba(100,200,100,0.15)', btnSecText: '#d8f0d8', dark: true,  label: 'Forest' },
+  ocean:        { bg1: '#003366', bg2: '#006699', cardBg: 'rgba(0,40,80,0.5)',        cardBorder: 'rgba(80,180,255,0.25)',text: '#d0ecff', textMuted: 'rgba(150,200,255,0.55)',    accent: '#29b6f6', accentText: '#001a33', btnSecBg: 'rgba(80,180,255,0.15)',  btnSecText: '#d0ecff', dark: true,  label: 'Ocean' },
+  sand:         { bg1: '#f5e6c8', bg2: '#e8d5a0', cardBg: 'rgba(255,250,235,0.55)',  cardBorder: 'rgba(200,160,80,0.3)', text: '#3a2a10',  textMuted: '#8a6a30',                  accent: '#c97c1a', accentText: '#fff',    btnSecBg: 'rgba(200,160,80,0.18)',  btnSecText: '#3a2a10', dark: false, label: 'Sand' },
+  midnight:     { bg1: '#080820', bg2: '#0d0d2e', cardBg: 'rgba(10,10,35,0.6)',      cardBorder: 'rgba(80,80,200,0.25)', text: '#d0d0ff',  textMuted: 'rgba(160,160,230,0.55)',   accent: '#6366f1', accentText: '#fff',    btnSecBg: 'rgba(99,102,241,0.18)', btnSecText: '#d0d0ff', dark: true,  label: 'Midnight' }
+};
+
+function buildThemeGrid() {
+  const grid = document.getElementById('themeGrid');
+  grid.innerHTML = '';
+  for (const [key, t] of Object.entries(THEMES)) {
+    const el = document.createElement('div');
+    el.className = 'theme-swatch' + (key === state.theme ? ' active' : '');
+    el.setAttribute('data-label', t.label);
+    el.style.background = `linear-gradient(135deg, ${t.bg1}, ${t.bg2})`;
+    el.onclick = () => applyTheme(key);
+    grid.appendChild(el);
+  }
+}
+
+function applyTheme(key) {
+  if (!THEMES[key]) return;
+  const t = THEMES[key];
+  state.theme = key;
+  saveState();
+  const root = document.documentElement;
+  root.style.setProperty('--bg1', t.bg1);
+  root.style.setProperty('--bg2', t.bg2);
+  root.style.setProperty('--card-bg', t.cardBg);
+  root.style.setProperty('--card-border', t.cardBorder);
+  root.style.setProperty('--text', t.text);
+  root.style.setProperty('--text-muted', t.textMuted);
+  root.style.setProperty('--accent', t.accent);
+  root.style.setProperty('--accent-text', t.accentText);
+  root.style.setProperty('--btn-secondary-bg', t.btnSecBg);
+  root.style.setProperty('--btn-secondary-text', t.btnSecText);
+  document.body.style.background = `linear-gradient(160deg, ${t.bg1}, ${t.bg2})`;
+  document.querySelectorAll('.theme-swatch').forEach(el => el.classList.remove('active'));
+  const active = document.querySelector(`.theme-swatch[data-label="${t.label}"]`);
+  if (active) active.classList.add('active');
+}
+
+function applyFont(font) {
+  state.font = font;
+  document.body.style.fontFamily = font;
+  saveState();
+}
+
+const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function updateClock() {
+  const now = new Date();
+  let h = now.getHours();
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  let timeStr;
+  if (state.military) {
+    timeStr = String(h).padStart(2,'0') + ':' + m + ':' + s;
+  } else {
+    const suffix = h >= 12 ? ' PM' : ' AM';
+    h = h % 12 || 12;
+    timeStr = h + ':' + m + ':' + s + suffix;
+  }
+  document.getElementById('clock').textContent = timeStr;
+  if (state.showDate) {
+    const dateEl = document.getElementById('date-display');
+    dateEl.textContent = DAYS[now.getDay()] + ', ' + MONTHS[now.getMonth()] + ' ' + now.getDate();
+    dateEl.style.display = '';
+  } else {
+    document.getElementById('date-display').style.display = 'none';
+  }
+
+  if (alarmSet && alarmTime) {
+    const nowStr = String(now.getHours()).padStart(2,'0') + ':' +
+                   String(now.getMinutes()).padStart(2,'0') + ':' +
+                   String(now.getSeconds()).padStart(2,'0');
+    if (nowStr === alarmTime) triggerAlarm();
+  }
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function getNextOccurrence(timeString) {
+  const [hh, mm, ss] = timeString.split(':').map(Number);
+  const now = new Date();
+  const fire = new Date();
+  fire.setHours(hh, mm, ss || 0, 0);
+  if (fire <= now) fire.setDate(fire.getDate() + 1);
+  return fire;
+}
+
+async function scheduleNativeAlarm(timeString) {
+  if (!isNativeApp || !LocalNotifications) return;
+  try {
+    await LocalNotifications.requestPermissions();
+    if (LocalNotifications.checkExactNotificationSetting) {
+      const exact = await LocalNotifications.checkExactNotificationSetting();
+      if (exact?.value !== 'granted' && LocalNotifications.changeExactNotificationSetting) {
+        await LocalNotifications.changeExactNotificationSetting();
+      }
+    }
+  } catch (e) {}
+
+  const fireAt = getNextOccurrence(timeString);
+  scheduledNotificationId = Date.now() % 2147483000;
+  try {
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: scheduledNotificationId,
+        title: 'Alarm Clock',
+        body: 'Your alarm is going off.',
+        schedule: { at: fireAt, allowWhileIdle: true },
+        sound: 'beep.wav',
+        smallIcon: 'ic_stat_icon_config_sample',
+        channelId: 'alarm-clock',
+        extra: { alarmTime: timeString }
+      }]
+    });
+  } catch (e) {
+    console.warn('Failed to schedule native alarm', e);
+  }
+}
+
+async function cancelNativeAlarm() {
+  if (!isNativeApp || !LocalNotifications || !scheduledNotificationId) return;
+  try {
+    await LocalNotifications.cancel({ notifications: [{ id: scheduledNotificationId }] });
+  } catch (e) {}
+  scheduledNotificationId = null;
+}
+
+function alarmAction() {
+  const btn = document.getElementById('alarmButton');
+  if (!alarmSet) {
+    const timeInput = document.getElementById('alarmTime').value;
+    if (!timeInput) { showToast('Please select a time first'); return; }
+    const parts = timeInput.split(':');
+    alarmTime = parts[0].padStart(2,'0') + ':' + (parts[1]||'00').padStart(2,'0') + ':' + (parts[2]||'00').padStart(2,'0');
+    alarmSet = true;
+    btn.textContent = '🔔 Cancel Alarm';
+    btn.classList.add('armed');
+    document.getElementById('alarm-status').textContent = '⏰ Alarm set for ' + formatAlarmDisplay(alarmTime);
+    scheduleNativeAlarm(alarmTime);
+  } else {
+    cancelAlarm();
+  }
+}
+
+function formatAlarmDisplay(t) {
+  const [h, m] = t.split(':').map(Number);
+  if (state.military) return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+  const suffix = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return h12 + ':' + String(m).padStart(2,'0') + ' ' + suffix;
+}
+
+function triggerAlarm() {
+  alarmSet = false;
+  alarmTime = null;
+  scheduledNotificationId = null;
+  document.getElementById('alarmButton').textContent = '■ Stop Alarm';
+  document.getElementById('alarmButton').classList.add('armed');
+  document.getElementById('alarmButton').onclick = stopAlarm;
+  document.getElementById('alarm-status').textContent = '🔔 ALARM!';
+  document.getElementById('main-card').classList.add('ringing');
+  playSound();
+}
+
+function stopAlarm() {
+  stopSound();
+  document.getElementById('main-card').classList.remove('ringing');
+  document.getElementById('alarmButton').textContent = 'Set Alarm';
+  document.getElementById('alarmButton').classList.remove('armed');
+  document.getElementById('alarmButton').onclick = alarmAction;
+  document.getElementById('alarm-status').textContent = '';
+}
+
+function cancelAlarm() {
+  alarmSet = false;
+  alarmTime = null;
+  cancelNativeAlarm();
+  document.getElementById('alarmButton').textContent = 'Set Alarm';
+  document.getElementById('alarmButton').classList.remove('armed');
+  document.getElementById('alarm-status').textContent = '';
+}
+
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+let alarmInterval = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+function beepPattern(frequencies, duration, gap) {
+  stopSound();
+  const ctx = getAudioCtx();
+  let t = ctx.currentTime;
+  let i = 0;
+  function doBeep() {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.frequency.value = frequencies[i % frequencies.length];
+    g.gain.setValueAtTime(0.4, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + duration);
+    osc.start(t); osc.stop(t + duration);
+    t += duration + gap; i++;
+  }
+  doBeep();
+  alarmInterval = setInterval(doBeep, (duration + gap) * 1000);
+}
+
+function playSound() {
+  const s = state.sound;
+  const soundFiles = {
+    alarm1:'sounds/alarm1.mp3',
+    alarm2:'sounds/alarm2.mp3',
+    alarm3:'sounds/alarm3.mp3'
+  };
+  if (s === 'custom' && state.customSoundURL) {
+    audio.src = state.customSoundURL; audio.loop = true; audio.play().catch(()=>{});
+    return;
+  }
+  if (soundFiles[s]) {
+    audio.src = soundFiles[s];
+    audio.loop = true;
+    audio.play().catch(() => playSynthSound(s));
+    return;
+  }
+  playSynthSound(s);
+}
+
+function playSynthSound(s) {
+  stopSound();
+  if      (s === 'alarm1')  beepPattern([880, 660],           0.15, 0.05);
+  else if (s === 'alarm2')  beepPattern([1200, 1200, 1200],   0.08, 0.08);
+  else if (s === 'alarm3')  beepPattern([440, 550, 660, 550], 0.2,  0.05);
+  else if (s === 'gentle')  beepPattern([523, 659, 784],      0.4,  0.2);
+  else if (s === 'beep')    beepPattern([1000],               0.1,  0.4);
+  else if (s === 'buzzer')  beepPattern([120, 100],           0.3,  0.05);
+}
+
+function stopSound() {
+  audio.pause(); audio.currentTime = 0;
+  if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+}
+
+function previewSound() {
+  stopPreview();
+  const s = document.getElementById('sound').value;
+  if (s === 'custom' && state.customSoundURL) {
+    previewAudio.src = state.customSoundURL;
+    previewAudio.play().catch(()=>{});
+    setTimeout(() => previewAudio.pause(), 3000);
+  } else if (s === 'alarm1' || s === 'alarm2' || s === 'alarm3') {
+    previewAudio.src = `sounds/${s}.mp3`;
+    previewAudio.play().catch(() => playSynthSound(s));
+    setTimeout(stopPreview, 3000);
+  } else {
+    playSynthSound(s);
+    setTimeout(stopSound, 3000);
+  }
+}
+
+function stopPreview() {
+  previewAudio.pause(); previewAudio.currentTime = 0;
+  stopSound();
+}
+
+function browseSound() { document.getElementById('fileInput').click(); }
+
+function handleCustomFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  state.customSoundURL  = URL.createObjectURL(file);
+  state.customSoundName = file.name;
+  document.getElementById('custom-sound-name').textContent = '📄 ' + file.name;
+  state.sound = 'custom';
+  saveState();
+}
+
+document.getElementById('sound').addEventListener('change', function() {
+  document.getElementById('customFileBtn').style.display = this.value === 'custom' ? 'flex' : 'none';
+  state.sound = this.value;
+  saveState();
+});
+
+function winMinimize() {}
+function winMaximize() {}
+function winClose() {}
+
+function openSettings() {
+  buildThemeGrid();
+  loadSettingsUI();
+  document.getElementById('settings-panel').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-panel').classList.remove('open');
+}
+
+document.getElementById('settings-panel').addEventListener('click', function(e) {
+  if (e.target === this) closeSettings();
+});
+
+function settingChanged() {
+  state.military = document.getElementById('military').checked;
+  state.showDate  = document.getElementById('showDate').checked;
+  state.sound     = document.getElementById('sound').value;
+  saveState();
+}
+
+function loadSettingsUI() {
+  document.getElementById('military').checked    = state.military;
+  document.getElementById('showDate').checked    = state.showDate;
+  document.getElementById('disableJS').checked   = state.disableJS;
+  const fontSel = document.getElementById('font');
+  for (let opt of fontSel.options) {
+    if (opt.value === state.font) { fontSel.value = opt.value; break; }
+  }
+  document.getElementById('sound').value = state.sound;
+  document.getElementById('customFileBtn').style.display = state.sound === 'custom' ? 'flex' : 'none';
+  if (state.customSoundName) {
+    document.getElementById('custom-sound-name').textContent = '📄 ' + state.customSoundName;
+  }
+}
+
+function toggleAnimations() {
+  animationsDisabled = document.getElementById('disableJS').checked;
+  state.disableJS = animationsDisabled;
+  if (animationsDisabled) {
+    let style = document.getElementById('no-anim');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'no-anim';
+      style.textContent = '*, *::before, *::after { animation: none !important; transition: none !important; }';
+      document.head.appendChild(style);
+    }
+  } else {
+    const el = document.getElementById('no-anim');
+    if (el) el.remove();
+  }
+  saveState();
+}
+
+async function saveState() {
+  const toSave = {...state, customSoundURL: null};
+  localStorage.setItem('alarmState', JSON.stringify(toSave));
+  if (Preferences) {
+    try { await Preferences.set({ key: 'alarmState', value: JSON.stringify(toSave) }); } catch (e) {}
+  }
+}
+
+async function loadState() {
+  try {
+    if (Preferences) {
+      const pref = await Preferences.get({ key: 'alarmState' });
+      if (pref.value) Object.assign(state, JSON.parse(pref.value));
+      else {
+        const raw = localStorage.getItem('alarmState');
+        if (raw) Object.assign(state, JSON.parse(raw));
+      }
+    } else {
+      const raw = localStorage.getItem('alarmState');
+      if (raw) Object.assign(state, JSON.parse(raw));
+    }
+  } catch(e) {}
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+async function initNativeBits() {
+  if (!isNativeApp) return;
+  try {
+    if (Plugins.StatusBar?.setStyle) {
+      await Plugins.StatusBar.setStyle({ style: THEMES[state.theme]?.dark ? 'DARK' : 'LIGHT' });
+    }
+  } catch (e) {}
+
+  if (LocalNotifications?.createChannel) {
+    try {
+      await LocalNotifications.createChannel({
+        id: 'alarm-clock',
+        name: 'Alarm Clock',
+        description: 'Alarm notifications',
+        importance: 5,
+        visibility: 1,
+        sound: 'beep.wav',
+        vibration: true,
+        lights: true
+      });
+    } catch (e) {}
+  }
+
+  if (LocalNotifications?.addListener) {
+    LocalNotifications.addListener('localNotificationReceived', () => {
+      if (!document.getElementById('main-card').classList.contains('ringing')) triggerAlarm();
+    });
+    LocalNotifications.addListener('localNotificationActionPerformed', () => {
+      if (!document.getElementById('main-card').classList.contains('ringing')) triggerAlarm();
+    });
+  }
+}
+
+async function init() {
+  await loadState();
+  applyTheme(state.theme);
+  applyFont(state.font);
+  if (state.disableJS) {
+    document.getElementById('disableJS').checked = true;
+    toggleAnimations();
+  }
+  await initNativeBits();
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,632 @@
+/* ═══════════════════════════════════════════════════════════════
+   style.css — Shared stylesheet for Alarm Clock (index + settings)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ══════════════════════════════════════
+   § 1  CSS CUSTOM PROPERTIES (TOKENS)
+   ══════════════════════════════════════ */
+:root {
+  --bg1:              #e9eef5;
+  --bg2:              #cfd9e6;
+  --card-bg:          rgba(255,255,255,0.38);
+  --card-border:      rgba(255,255,255,0.6);
+  --text:             #1a1a2e;
+  --text-muted:       #666;
+  --accent:           #007aff;
+  --accent-text:      #ffffff;
+  --btn-secondary-bg: rgba(0,0,0,0.07);
+  --btn-secondary-text: #1a1a2e;
+  --card-shadow:      0 20px 50px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
+  --card-opacity:     1;
+}
+
+/* ══════════════════════════════════════
+   § 2  BASE / BODY
+   ══════════════════════════════════════ */
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+/* index.html body */
+body.clock-body {
+  overflow: hidden;
+  min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  background: linear-gradient(160deg, var(--bg1), var(--bg2));
+  display: grid;
+  place-items: center;
+  transition: background 0.6s ease;
+  padding: 16px;
+}
+
+/* settings.html body */
+body.settings-body {
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  background: #f0f2f5;
+  color: #1a1a2e;
+  font-size: 14px;
+  padding: clamp(12px, 3vw, 24px);
+  min-height: 100vh;
+  /* min dimensions enforced by Python API clamps + JS handle constraints */
+  min-width: 320px;
+  min-height: 400px;
+  box-sizing: border-box;
+}
+
+/* ══════════════════════════════════════
+   § 3  MAIN CLOCK CARD
+   ══════════════════════════════════════ */
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(30px) saturate(1.4);
+  -webkit-backdrop-filter: blur(30px) saturate(1.4);
+  border: 1px solid var(--card-border);
+  border-radius: 28px;
+  padding: 28px 24px 24px;
+  width: 300px;
+  text-align: center;
+  box-shadow: var(--card-shadow);
+  opacity: var(--card-opacity);
+  transition: opacity 0.3s;
+  position: relative;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.header-icon {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+.header h1 {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+/* ── CLOCK ── */
+.clock-wrap { margin: 10px 0 18px; }
+#clock {
+  font-family: inherit;
+  font-size: 42px;
+  font-weight: 300;
+  color: var(--text);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+#date-display {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── ALARM STATUS ── */
+#alarm-status {
+  font-size: 11px;
+  color: var(--accent);
+  min-height: 16px;
+  margin-bottom: 8px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  transition: opacity 0.3s;
+}
+
+/* ── TIME INPUT ── */
+.input-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+input[type="time"] {
+  background: rgba(0,122,255,0.10);
+  border: 1.5px solid rgba(0,122,255,0.2);
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+input[type="time"]:focus { border-color: var(--accent); }
+
+/* ══════════════════════════════════════
+   § 4  BUTTONS (SHARED)
+   ══════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  transition: transform 0.12s, opacity 0.2s, background 0.3s;
+}
+.btn:active { transform: scale(0.96); }
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-text);
+  padding: 11px 22px;
+  width: 100%;
+  margin-top: 12px;
+  font-size: 15px;
+}
+.btn-primary.armed {
+  background: #ff3b30;
+  color: #fff;
+}
+.btn-secondary {
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  padding: 9px 16px;
+  font-size: 12px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px;
+  background: rgba(0,0,0,0.08);
+  margin: 16px 0;
+}
+
+/* ══════════════════════════════════════
+   § 5  SETTINGS PANEL (inline overlay in index.html)
+   ══════════════════════════════════════ */
+#settings-panel {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px);
+  z-index: 100;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+#settings-panel.open { display: flex; }
+
+.settings-card {
+  background: rgba(245,247,250,0.97);
+  border-radius: 22px;
+  padding: 26px 22px;
+  width: 320px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.25);
+  color: #1a1a2e;
+  scrollbar-width: thin;
+}
+.settings-card::-webkit-scrollbar { width: 4px; }
+.settings-card::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.settings-header h2 { font-size: 17px; font-weight: 600; }
+.close-btn {
+  background: rgba(0,0,0,0.07);
+  border: none;
+  border-radius: 50%;
+  width: 30px; height: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: #555;
+  transition: background 0.2s;
+}
+.close-btn:hover { background: rgba(0,0,0,0.14); }
+
+.setting-group { margin-bottom: 18px; }
+
+/* ══════════════════════════════════════
+   § 6  SHARED SETTINGS CONTROLS
+        (used in both the overlay panel
+         in index.html AND settings.html)
+   ══════════════════════════════════════ */
+
+/* Labels */
+.setting-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 7px;
+  margin-top: 18px;
+  display: block;
+}
+/* index.html inline panel uses its own specificity — keep original */
+.settings-card .setting-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  margin-top: 0;
+}
+
+/* Toggle rows */
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label-text { font-size: 14px; color: #333; }
+/* settings.html uses plain <span> inside .toggle-row */
+.toggle-row > span { font-size: 13px; color: #333; }
+
+/* Toggle switch */
+.toggle {
+  position: relative;
+  width: 44px; height: 24px;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.slider-track {
+  position: absolute;
+  inset: 0;
+  background: #ccc;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+.slider-track::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 3px; top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.toggle input:checked + .slider-track { background: #007aff; }
+.toggle input:checked + .slider-track::before { transform: translateX(20px); }
+
+/* Select dropdowns */
+select {
+  width: 100%;
+  padding: 9px 36px 9px 12px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0,0,0,0.12);
+  background: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: #1a1a2e;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color 0.2s;
+}
+select:focus { border-color: #007aff; }
+
+/* Range slider */
+input[type="range"] {
+  width: 100%;
+  accent-color: #007aff;
+  height: 4px;
+  cursor: pointer;
+  display: block;
+}
+
+/* Theme swatches grid */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.theme-swatch {
+  height: 44px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 2.5px solid transparent;
+  transition: border-color 0.2s, transform 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.theme-swatch:hover { transform: scale(1.06); }
+.theme-swatch.active { border-color: #007aff; }
+.theme-swatch::after {
+  content: attr(data-label);
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.45);
+  color: white;
+  font-size: 8px;
+  text-align: center;
+  padding: 2px 0;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Custom file button */
+.file-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: rgba(0,122,255,0.08);
+  border: 1.5px dashed rgba(0,122,255,0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #007aff;
+  font-family: 'DM Sans', sans-serif;
+  width: 100%;
+  transition: background 0.2s;
+  margin-top: 8px;
+}
+.file-btn:hover { background: rgba(0,122,255,0.13); }
+
+#custom-sound-name,
+#custom-name {
+  font-size: 11px;
+  color: #888;
+  margin-top: 5px;
+}
+
+/* ── Preview buttons — always dark text, readable on any theme ── */
+.btn-preview-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.btn-preview {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid rgba(0,0,0,0.13);
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(0,0,0,0.09);
+  color: #111;               /* always dark — readable across all themes */
+  transition: background 0.15s;
+}
+.btn-preview:hover  { background: rgba(0,0,0,0.17); }
+.btn-preview:active { background: rgba(0,0,0,0.24); transform: scale(0.97); }
+
+/* Settings footer (index.html inline panel) */
+.settings-footer {
+  text-align: center;
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 22px;
+  line-height: 1.8;
+}
+.settings-footer a { color: #007aff; text-decoration: none; }
+.settings-footer a:hover { text-decoration: underline; }
+
+/* ══════════════════════════════════════
+   § 7  SETTINGS WINDOW (settings.html)
+        Overrides for the standalone page
+   ══════════════════════════════════════ */
+.settings-page-card {
+  background: white;
+  padding: clamp(16px, 4vw, 24px);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.settings-page-card h3 {
+  font-size: clamp(15px, 4vw, 18px);
+  font-weight: 600;
+  margin-bottom: 18px;
+  color: #111;
+}
+/* Fluid theme grid for settings window */
+.settings-page-card .theme-grid {
+  grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+  margin-top: 8px;
+}
+.settings-page-card .setting-label {
+  margin-top: 18px;
+  font-size: 10px;
+}
+.settings-page-card .setting-label:first-of-type { margin-top: 0; }
+
+/* Save button */
+.save-btn {
+  width: 100%;
+  padding: clamp(10px, 2.5vw, 13px);
+  border: none;
+  border-radius: 12px;
+  background: #007aff;
+  color: white;
+  font-family: inherit;
+  font-size: clamp(14px, 3.5vw, 15px);
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 22px;
+  transition: opacity 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.save-btn:hover { opacity: 0.9; }
+.save-btn:active { transform: scale(0.97); }
+.save-flash { background: #34c759 !important; }
+
+/* Settings page footer */
+.settings-page-footer {
+  text-align: center;
+  font-size: 10px;
+  color: #bbb;
+  margin-top: 18px;
+  line-height: 2;
+}
+.settings-page-footer a { color: #007aff; text-decoration: none; }
+
+/* ══════════════════════════════════════
+   § 8  BROWSER NAV BAR (index.html only, hidden in pywebview)
+   ══════════════════════════════════════ */
+#browser-nav {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 46px;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-bottom: 1px solid rgba(255,255,255,0.5);
+  box-shadow: 0 1px 12px rgba(0,0,0,0.08);
+  z-index: 200;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  transition: background 0.4s;
+}
+body.in-browser #browser-nav { display: flex; }
+body.in-browser { padding-top: 46px; }
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.nav-logo  { font-size: 18px; line-height: 1; }
+.nav-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.01em;
+  opacity: 0.85;
+}
+.nav-title span { opacity: 0.45; font-weight: 400; }
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.nav-link {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.55;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 8px;
+  transition: opacity 0.2s, background 0.2s;
+  font-weight: 500;
+}
+.nav-link:hover { opacity: 1; background: rgba(0,0,0,0.06); }
+
+/* ══════════════════════════════════════
+   § 9  ALARM RINGING STATE
+   ══════════════════════════════════════ */
+@keyframes ring-pulse {
+  0%, 100% { box-shadow: 0 20px 50px rgba(255,59,48,0.3),  0 2px 8px rgba(0,0,0,0.08); }
+  50%       { box-shadow: 0 20px 60px rgba(255,59,48,0.55), 0 2px 8px rgba(0,0,0,0.08); }
+}
+.card.ringing { animation: ring-pulse 1s ease-in-out infinite; }
+
+/* ══════════════════════════════════════
+   § 10  CUSTOM TITLEBAR (pywebview frameless, index.html)
+   ══════════════════════════════════════ */
+#titlebar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 32px;
+  z-index: 300;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+  gap: 2px;
+}
+body:not(.in-browser) #titlebar { display: flex; }
+body:not(.in-browser).clock-body { padding-top: 32px; }
+
+.wc-btn {
+  width: 28px; height: 22px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.0);
+  color: var(--text);
+  opacity: 0.35;
+  transition: opacity 0.15s, background 0.15s;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+.wc-btn:hover { opacity: 1; background: rgba(0,0,0,0.08); }
+.wc-btn.wc-close:hover { background: rgba(255,59,48,0.75); color: white; opacity: 1; }
+.wc-btn.wc-min:hover   { background: rgba(0,0,0,0.10); }
+.wc-btn.wc-max:hover   { background: rgba(0,0,0,0.10); }
+
+/* ══════════════════════════════════════
+   § 11  TOAST
+   ══════════════════════════════════════ */
+#toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1a1a2e;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap;
+  z-index: 999;
+}
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ══════════════════════════════════════
+   § 12  MISC HELPERS
+   ══════════════════════════════════════ */
+.dark-text { --text: #f0f0f0; --text-muted: rgba(255,255,255,0.5); }
+
+@media (max-width: 280px) {
+  .theme-grid { grid-template-columns: repeat(3, 1fr); }
+  .btn-preview-row { flex-direction: column; }
+}
+
+
+/* Native mobile app (Capacitor) should not show browser chrome clones */
+body.native-app #browser-nav { display: none !important; }
+body.native-app.clock-body { padding-top: 16px !important; }
