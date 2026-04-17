@@ -26,6 +26,9 @@
   <div class="nav-links">
     <a class="nav-link" href="https://webgeeks.org"        target="_blank">webgeeks.org</a>
     <a class="nav-link" href="https://github.com/ImmaGundam/SimpleAlarmClock" target="_blank">GitHub</a>
+    <a class="nav-link nav-link--download" href="https://github.com/ImmaGundam/SimpleAlarmClock/releases" target="_blank">
+      <svg width="11" height="11" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:inline-block;vertical-align:middle;margin-right:3px;margin-top:-1px"><rect x="0"  y="0"  width="40" height="40" rx="3" fill="currentColor"/><rect x="48" y="0"  width="40" height="40" rx="3" fill="currentColor"/><rect x="0"  y="48" width="40" height="40" rx="3" fill="currentColor"/><rect x="48" y="48" width="40" height="40" rx="3" fill="currentColor"/></svg>Desktop App
+    </a>
   </div>
 </nav>
 
@@ -142,13 +145,30 @@
           <span class="slider-track"></span>
         </label>
       </div>
+      <div class="opacity-row">
+        <span class="toggle-label-text">Window Opacity</span>
+        <div class="opacity-controls">
+          <input type="range" id="windowOpacity" min="20" max="100" step="1"
+                 value="100" oninput="applyWindowOpacity(this.value)">
+          <span class="opacity-value" id="opacityValue">100%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wake from Sleep -->
+    <div class="setting-group" id="wake-group">
+      <span class="setting-label">Wake from Sleep</span>
+      <button class="wake-btn" id="wake-btn" onclick="handleWakeBtn()">
+        <span class="wake-btn-os" id="wake-btn-os">⏳ Detecting...</span>
+        <span class="wake-btn-status" id="wake-btn-status"></span>
+      </button>
     </div>
 
     <div class="settings-footer">
-      Developed by James D.<br>
-      <a href="https://github.com/ImmaGundam" target="_blank">github.com/ImmaGundam</a>
+      Developed by jdDev@ImmaGundam<br>
+      <a href="https://SimpleAlarmClock.com" target="_blank">SimpleAlarmClock.com</a>
       &nbsp;·&nbsp;
-      <a href="https://webgeeks.org" target="_blank">webgeeks.org</a>
+      <a href="https://github.com/ImmaGundam/SimpleAlarmClock" target="_blank">GitHub</a>
     </div>
   </div>
 </div>
@@ -163,7 +183,11 @@
 
 <script>
 // ─── PLATFORM DETECTION ─────────────────────────────────────────────────────
-const isNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const isElectron = !!(window.electronAPI);
+const isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const isPywebview = !!(window.pywebview);
+const isNativeApp = isElectron || isCapacitor || isPywebview;
+const isPythonDesktopApp = isElectron || isPywebview; // for winMinimize/winClose guards
 const Plugins = window.Capacitor?.Plugins || {};
 const LocalNotifications = Plugins.LocalNotifications;
 const Preferences = Plugins.Preferences;
@@ -171,6 +195,7 @@ const Preferences = Plugins.Preferences;
 (function detectEnv() {
   document.body.classList.toggle('in-browser', !isNativeApp);
   document.body.classList.toggle('native-app', isNativeApp);
+  if (isElectron) document.body.classList.add('in-electron');
 })();
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -182,7 +207,8 @@ let state = {
   sound: 'alarm1',
   disableJS: false,
   customSoundURL: null,
-  customSoundName: null
+  customSoundName: null,
+  windowOpacity: 1.0
 };
 
 let alarmSet = false;
@@ -322,7 +348,7 @@ function updateAlarmModeNote() {
 async function loadPlatformInfoFromPython() {
   if (!isPythonDesktopApp) return;
   try {
-    backendPlatformInfo = await window.pywebview.api.get_platform_info();
+    if (window.pywebview) backendPlatformInfo = await window.pywebview.api.get_platform_info();
     updateAlarmModeNote();
   } catch (e) {
     console.warn('Failed to load Python platform info', e);
@@ -371,6 +397,26 @@ async function cancelNativeAlarm() {
   scheduledNotificationId = null;
 }
 
+
+// ── Wake lock + OS scheduler helper (Electron only) ──────────────────────────
+function setWakeLock(active, timeStr) {
+  if (window.electronAPI && window.electronAPI.alarmActive) {
+    window.electronAPI.alarmActive(active, timeStr || null);
+  }
+}
+
+// If Electron launched us because a scheduled alarm fired, trigger it
+if (window.electronAPI && window.electronAPI.onSchedulerAlarm) {
+  window.electronAPI.onSchedulerAlarm(() => {
+    console.log('[AlarmClock] Scheduler woke app — firing alarm');
+    // Small delay so the UI is fully rendered first
+    setTimeout(() => {
+      if (!document.getElementById('main-card').classList.contains('ringing')) {
+        triggerAlarm();
+      }
+    }, 800);
+  });
+}
 function alarmAction() {
   const btn = document.getElementById('alarmButton');
   if (!alarmSet) {
@@ -383,6 +429,7 @@ function alarmAction() {
     btn.classList.add('armed');
     document.getElementById('alarm-status').textContent = '⏰ Alarm set for ' + formatAlarmDisplay(alarmTime);
     scheduleNativeAlarm(alarmTime);
+    setWakeLock(true, alarmTime);  // keep app alive + write alarm file for OS scheduler
   } else {
     cancelAlarm();
   }
@@ -415,6 +462,7 @@ function stopAlarm() {
   document.getElementById('alarmButton').classList.remove('armed');
   document.getElementById('alarmButton').onclick = alarmAction;
   document.getElementById('alarm-status').textContent = '';
+  setWakeLock(false);  // release wake lock
 }
 
 function cancelAlarm() {
@@ -424,6 +472,7 @@ function cancelAlarm() {
   document.getElementById('alarmButton').textContent = 'Set Alarm';
   document.getElementById('alarmButton').classList.remove('armed');
   document.getElementById('alarm-status').textContent = '';
+  setWakeLock(false);  // release wake lock
 }
 
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -457,9 +506,12 @@ function beepPattern(frequencies, duration, gap) {
 function playSound() {
   const s = state.sound;
   const soundFiles = {
-    alarm1:'sounds/alarm1.mp3',
-    alarm2:'sounds/alarm2.mp3',
-    alarm3:'sounds/alarm3.mp3'
+    alarm1: 'assets/sounds/alarm1.mp3',
+    alarm2: 'assets/sounds/alarm2.mp3',
+    alarm3: 'assets/sounds/alarm3.mp3',
+    gentle: 'assets/sounds/gentle.mp3',
+    beep:   'assets/sounds/beep.mp3',
+    buzzer: 'assets/sounds/buzzer.mp3',
   };
   if (s === 'custom' && state.customSoundURL) {
     audio.src = state.customSoundURL; audio.loop = true; audio.play().catch(()=>{});
@@ -468,7 +520,7 @@ function playSound() {
   if (soundFiles[s]) {
     audio.src = soundFiles[s];
     audio.loop = true;
-    audio.play().catch(() => playSynthSound(s));
+    audio.play().catch(() => playSynthSound(s));  // synth fallback if file fails
     return;
   }
   playSynthSound(s);
@@ -496,8 +548,8 @@ function previewSound() {
     previewAudio.src = state.customSoundURL;
     previewAudio.play().catch(()=>{});
     setTimeout(() => previewAudio.pause(), 3000);
-  } else if (s === 'alarm1' || s === 'alarm2' || s === 'alarm3') {
-    previewAudio.src = `sounds/${s}.mp3`;
+  } else if (['alarm1','alarm2','alarm3','gentle','beep','buzzer'].includes(s)) {
+    previewAudio.src = `assets/sounds/${s}.mp3`;
     previewAudio.play().catch(() => playSynthSound(s));
     setTimeout(stopPreview, 3000);
   } else {
@@ -529,19 +581,22 @@ document.getElementById('sound').addEventListener('change', function() {
   saveState();
 });
 
-async function winMinimize() {
+function winMinimize() {
+  if (window.electronAPI) { window.electronAPI.minimize(); return; }
   if (!isPythonDesktopApp) return;
-  try { await window.pywebview.api.window_action('minimize'); } catch (e) {}
+  try { window.pywebview.api.window_action('minimize'); } catch (e) {}
 }
 
-async function winMaximize() {
+function winMaximize() {
+  if (window.electronAPI) { window.electronAPI.toggleMaximize(); return; }
   if (!isPythonDesktopApp) return;
-  try { await window.pywebview.api.window_action('toggle_maximize'); } catch (e) {}
+  try { window.pywebview.api.window_action('toggle_maximize'); } catch (e) {}
 }
 
-async function winClose() {
+function winClose() {
+  if (window.electronAPI) { window.electronAPI.close(); return; }
   if (!isPythonDesktopApp) return;
-  try { await window.pywebview.api.window_action('close'); } catch (e) {}
+  try { window.pywebview.api.window_action('close'); } catch (e) {}
 }
 
 function openSettings() {
@@ -578,6 +633,21 @@ function loadSettingsUI() {
   if (state.customSoundName) {
     document.getElementById('custom-sound-name').textContent = '📄 ' + state.customSoundName;
   }
+}
+
+function applyWindowOpacity(val) {
+  const v = Math.max(20, Math.min(100, Number(val)));
+  state.windowOpacity = v / 100;
+  document.documentElement.style.setProperty('--window-opacity', state.windowOpacity);
+  document.getElementById('opacityValue').textContent = v + '%';
+  if (isElectron && window.electronAPI?.setWindowOpacity) {
+    // OS-level transparency — makes the background genuinely see-through
+    window.electronAPI.setWindowOpacity(state.windowOpacity);
+  } else {
+    // Browser / non-Electron fallback: fade the whole page
+    document.body.style.opacity = state.windowOpacity;
+  }
+  saveState();
 }
 
 function toggleAnimations() {
@@ -664,7 +734,21 @@ async function initNativeBits() {
 
 async function init() {
   await loadState();
+  initWakeGroup();
   applyTheme(state.theme);
+  // Restore window opacity
+  if (state.windowOpacity !== undefined && state.windowOpacity !== 1.0) {
+    const pct = Math.round(state.windowOpacity * 100);
+    const slider = document.getElementById('windowOpacity');
+    if (slider) slider.value = pct;
+    const label = document.getElementById('opacityValue');
+    if (label) label.textContent = pct + '%';
+    if (isElectron && window.electronAPI?.setWindowOpacity) {
+      window.electronAPI.setWindowOpacity(state.windowOpacity);
+    } else {
+      document.body.style.opacity = state.windowOpacity;
+    }
+  }
   applyFont(state.font);
   if (state.disableJS) {
     document.getElementById('disableJS').checked = true;
@@ -676,6 +760,88 @@ async function init() {
 }
 
 init();
+
+// ── Wake from Sleep Scheduler ────────────────────────────────────────────────
+// Detects platform via Electron and runs the appropriate setup inline.
+// No external scripts needed — everything is handled here via IPC + shell.
+
+let _wakePlatform = null;
+let _wakeInstalled  = false;
+
+// OS label + icon shown inside the button
+const WAKE_OS_LABELS = {
+  win32:  { icon: '🪟', label: 'Windows — Task Scheduler' },
+  linux:  { icon: '🐧', label: 'Linux — systemd / cron'  },
+  darwin: { icon: '🍏', label: 'macOS — launchd'         },
+};
+
+// Status text shown below the OS label inside the button
+function _wakeStatusText(installed, note) {
+  if (installed) return '● Active';
+  return note && note !== 'Not set up' ? note : '○ Not set up';
+}
+
+// Paint the button state
+function _renderWakeBtn(loading) {
+  const btn    = document.getElementById('wake-btn');
+  const osEl   = document.getElementById('wake-btn-os');
+  const statEl = document.getElementById('wake-btn-status');
+  if (!btn) return;
+
+  if (loading) {
+    osEl.textContent   = '⏳ Working...';
+    statEl.textContent = '';
+    btn.disabled = true;
+    btn.className = 'wake-btn wake-btn--loading';
+    return;
+  }
+
+  const os = WAKE_OS_LABELS[_wakePlatform] || { icon: '💻', label: _wakePlatform };
+  osEl.textContent   = os.icon + ' ' + os.label;
+  statEl.textContent = _wakeInstalled ? '● Active' : '○ Not set up';
+  btn.disabled  = false;
+  btn.className = 'wake-btn ' + (_wakeInstalled ? 'wake-btn--active' : 'wake-btn--inactive');
+}
+
+async function initWakeGroup() {
+  if (!window.electronAPI) {
+    document.getElementById('wake-group').style.display = 'none';
+    return;
+  }
+  _wakePlatform = await window.electronAPI.getPlatform();
+  _renderWakeBtn(true);
+  const status   = await window.electronAPI.checkWakeScheduler();
+  _wakeInstalled = status.installed;
+  _renderWakeBtn(false);
+}
+
+// Single button click:
+//   If NOT installed → install then open OS power settings
+//   If installed     → open OS power settings directly
+async function handleWakeBtn() {
+  if (!window.electronAPI) return;
+  if (!_wakeInstalled) {
+    _renderWakeBtn(true);
+    try {
+      const result = await window.electronAPI.setupWakeScheduler();
+      if (result.ok) {
+        _wakeInstalled = true;
+        showToast('Wake scheduler installed');
+      } else {
+        showToast('Setup failed: ' + result.message);
+        _renderWakeBtn(false);
+        return;
+      }
+    } catch(e) {
+      showToast('Error: ' + e.message);
+      _renderWakeBtn(false);
+      return;
+    }
+  }
+  _renderWakeBtn(false);
+  // Always open the OS power settings after install or if already active
+  await window.electronAPI.openWakeTimersSettings();
+}
 </script>
 </body>
 </html>

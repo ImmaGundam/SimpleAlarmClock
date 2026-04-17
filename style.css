@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   style.css — Shared stylesheet for Alarm Clock (index + settings)
+   style.css
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── RESET ── */
@@ -202,7 +202,7 @@ input[type="time"]:focus { border-color: var(--accent); }
 }
 
 /* ══════════════════════════════════════
-   § 5  SETTINGS PANEL (inline overlay in index.html)
+   § 5  SETTINGS PANEL
    ══════════════════════════════════════ */
 #settings-panel {
   display: none;
@@ -220,16 +220,33 @@ input[type="time"]:focus { border-color: var(--accent); }
 .settings-card {
   background: rgba(245,247,250,0.97);
   border-radius: 22px;
-  padding: 26px 22px;
+  padding: 26px 16px 26px 22px; /* right padding tightened so scrollbar has room */
   width: 320px;
   max-height: 88vh;
   overflow-y: auto;
   box-shadow: 0 30px 70px rgba(0,0,0,0.25);
   color: #1a1a2e;
   scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.18) transparent;
 }
-.settings-card::-webkit-scrollbar { width: 4px; }
-.settings-card::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+.settings-card::-webkit-scrollbar {
+  width: 6px;
+}
+.settings-card::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 8px 0;
+}
+.settings-card::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.18);
+  border-radius: 99px;
+  transition: background .15s;
+}
+.settings-card::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.32);
+}
+.settings-card::-webkit-scrollbar-corner {
+  background: transparent;
+}
 
 .settings-header {
   display: flex;
@@ -255,8 +272,6 @@ input[type="time"]:focus { border-color: var(--accent); }
 
 /* ══════════════════════════════════════
    § 6  SHARED SETTINGS CONTROLS
-        (used in both the overlay panel
-         in index.html AND settings.html)
    ══════════════════════════════════════ */
 
 .setting-label {
@@ -490,7 +505,7 @@ input[type="range"] {
 .settings-page-footer a { color: #007aff; text-decoration: none; }
 
 /* ══════════════════════════════════════
-   § 8  BROWSER NAV BAR (index.html only, hidden in pywebview)
+   § 8  BROWSER NAV BAR
    ══════════════════════════════════════ */
 #browser-nav {
   display: none;
@@ -521,7 +536,7 @@ body.in-browser { padding-top: 46px; }
 .nav-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  color: #1a1a2e;          /* hardcoded: nav bar is always light */
   letter-spacing: 0.01em;
   opacity: 0.85;
 }
@@ -533,7 +548,7 @@ body.in-browser { padding-top: 46px; }
 }
 .nav-link {
   font-size: 12px;
-  color: var(--text);
+  color: #1a1a2e;          /* hardcoded: nav bar is always light */
   opacity: 0.55;
   text-decoration: none;
   padding: 5px 10px;
@@ -553,7 +568,7 @@ body.in-browser { padding-top: 46px; }
 .card.ringing { animation: ring-pulse 1s ease-in-out infinite; }
 
 /* ══════════════════════════════════════
-   § 10  CUSTOM TITLEBAR (pywebview frameless, index.html)
+   § 10  CUSTOM TITLEBAR
    ══════════════════════════════════════ */
 #titlebar {
   display: none;
@@ -565,6 +580,12 @@ body.in-browser { padding-top: 46px; }
   justify-content: flex-end;
   padding: 0 8px;
   gap: 2px;
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+#titlebar .wc-btn {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
 }
 body:not(.in-browser) #titlebar { display: flex; }
 body:not(.in-browser).clock-body { padding-top: 32px; }
@@ -624,3 +645,128 @@ body:not(.in-browser).clock-body { padding-top: 32px; }
 
 body.native-app #browser-nav { display: none !important; }
 body.native-app.clock-body { padding-top: 16px !important; }
+
+/* ── Native-app transparent window ────────────────────────────────────────────
+   Remove the gradient background entirely so the OS compositor shows the
+   desktop through the window.  The card's own border-radius becomes the
+   effective "window shape" — matching its glass corners automatically.     */
+body.native-app.clock-body {
+  background: transparent;
+}
+
+/* Slightly stronger shadow so the floating card reads well over any desktop */
+body.native-app .card {
+  box-shadow: 0 24px 60px rgba(0,0,0,0.38), 0 4px 14px rgba(0,0,0,0.18);
+}
+/* ── Wake from Sleep button ── */
+.wake-btn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0,0,0,0.10);
+  background: rgba(0,0,0,0.04);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+  margin-top: 4px;
+}
+.wake-btn:hover { background: rgba(0,0,0,0.08); }
+.wake-btn:active { transform: scale(0.985); }
+.wake-btn:disabled { opacity: 0.55; cursor: default; transform: none; }
+
+.wake-btn--active {
+  border-color: rgba(52,199,89,0.45);
+  background: rgba(52,199,89,0.07);
+}
+.wake-btn--active:hover { background: rgba(52,199,89,0.12); }
+
+.wake-btn--inactive {
+  border-color: rgba(255,59,48,0.35);
+  background: rgba(255,59,48,0.05);
+}
+.wake-btn--inactive:hover { background: rgba(255,59,48,0.10); }
+
+.wake-btn--loading {
+  border-color: rgba(0,0,0,0.10);
+  background: rgba(0,0,0,0.04);
+}
+
+.wake-btn-os {
+  font-size: 12px;
+  font-weight: 500;
+  color: #1a1a2e;           /* hardcoded: settings card is always light */
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.wake-btn-status {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.wake-btn--active   .wake-btn-status { color: #1d9e3e; }
+.wake-btn--inactive .wake-btn-status { color: #cc3333; }
+.wake-btn--loading  .wake-btn-status { color: #888; }
+
+
+/* ── Window Opacity slider ── */
+.opacity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  gap: 12px;
+}
+.opacity-row:last-child { border-bottom: none; }
+.opacity-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.opacity-value {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+  min-width: 36px;
+  text-align: right;
+}
+input[type="range"]#windowOpacity {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 4px;
+  border-radius: 99px;
+  background: linear-gradient(to right, var(--accent, #007aff) 0%, var(--accent, #007aff) 100%);
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]#windowOpacity::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--accent, #007aff);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+input[type="range"]#windowOpacity::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+input[type="range"]#windowOpacity::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--accent, #007aff);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  cursor: pointer;
+}
