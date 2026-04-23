@@ -38,5 +38,5 @@ Works on Windows 10 & 11 in Desktop App by checking for Modern S0 & Traditional 
 - Unzip all files in same directory<br>
 - Run 'index.html' in browser <i>(double click)</i><br>
 
-<img width="420" height="983" alt="sac-settings" src="https://github.com/user-attachments/assets/517df791-4dda-4c39-b111-1b510b551f71" />
+<img width="420" height="557" alt="579937849-517df791-4dda-4c39-b111-1b510b551f71" src="https://github.com/user-attachments/assets/462f2089-a19a-4e26-8fd8-0de8ecf00005" />
 </p>
